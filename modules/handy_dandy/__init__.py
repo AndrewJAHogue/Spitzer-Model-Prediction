@@ -8,6 +8,7 @@ import numpy as np
 from astropy.nddata import Cutout2D
 # sys.path.append('F:/Python/modules')
 from modules.ajh_utils import lineplots, computer_path
+from astropy import fits
 
 # %%
 
@@ -286,8 +287,7 @@ def getFWHM_GaussianFitScaledAmp(img):
 def get_fwhm(cutout):
     try:
         fwhm_maj, fwhm_min = getFWHM_GaussianFitScaledAmp(cutout)
-        fwhm = np.sqrt(fwhm_maj**2 + fwhm_min**2)
-        return fwhm
+        return np.sqrt(fwhm_maj**2 + fwhm_min**2)
     except RuntimeError:
         if np.any(np.isnan(cutout)):
             print('WARNING: This cutout contains invalid values')

@@ -19,8 +19,8 @@ from modules.ajh_utils import lineplots
 def reshape_to_2dList(cutouts):
     return cutouts.reshape(-1, 2500)
 
-dir = './datasets/cutouts'
-files = os.listdir(dir)
+cutouts_dir = './datasets/cutouts'
+files = os.listdir(cutouts_dir)
 
 # %%
 
@@ -33,8 +33,8 @@ def do_all(file):
     if 'headers' in file:
         time.sleep(1)
         try:
-            print(f'{dir}/{file} loaded')
-            data, headers = joblib.load(f'{dir}/{file}')
+            print(f'{cutouts_dir}/{file} loaded')
+            data, headers = joblib.load(f'{cutouts_dir}/{file}')
             processed_data = []
             masked_data = []
             processed_data = hd.processData(data.reshape(-1,1) )
@@ -51,7 +51,7 @@ def do_all(file):
 
             return (file, processed_data , masked_data)
         except:
-            print(f'{dir}/{file} failed')
+            print(f'{cutouts_dir}/{file} failed')
             
         
             
@@ -74,8 +74,8 @@ def dumpAll():
 
 
 # %%
-dir = './datasets/MG mass processing/'
-files = os.listdir(dir)
+cutouts_dir = './datasets/MG mass processing/'
+files = os.listdir(cutouts_dir)
 file_testing = files[0]
 file_training = files[1]
 # training_data = np.array([])
@@ -92,8 +92,8 @@ file_training = files[1]
 #     except PermissionError:
 #         pass
 
-training_data = joblib.load(dir + file_training)
-testing_data = joblib.load(dir + file_testing)
+training_data = joblib.load(cutouts_dir + file_training)
+testing_data = joblib.load(cutouts_dir + file_testing)
 
 
 testing_data = testing_data.reshape(-1, 2500)

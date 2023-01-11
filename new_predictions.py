@@ -69,16 +69,17 @@ plt.imshow(prediction)
 
 # %%
 # look at some linecuts
-from ajh_utils.lineplots import SingleLinePlot, GetNthRow
+# from modules.ajh_utils.lineplots import SingleLinePlot, GetNthRow
+from modules.ajh_utils import lineplots as lplts
+
 
 # SingleLinePlot(25, 25, data=prediction.reshape(50,50))
 # SingleLinePlot(25, 25, data=output_pred_test)
 
 
-x, y_pred = GetNthRow(prediction, 25)
-x, y_sofia = GetNthRow(output_pred_test, 25)
-x, y_spits = GetNthRow(processed.reshape(50,50), 25)
-
+x, y_pred =  lplts.GetNthRow(prediction, 25)
+x, y_sofia = lplts.GetNthRow(output_pred_test, 25)
+x, y_spits = lplts.GetNthRow(processed.reshape(50,50), 25)
 
 %matplotlib inline 
 plt.plot(x, y_spits, label='Spitzer')

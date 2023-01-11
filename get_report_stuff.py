@@ -10,7 +10,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from modules.ajh_utils import lineplots
 import modules.handy_dandy as hd
 
-dir = './datasets/testing data'
+data_dir = './datasets/testing data'
 # training_file = './datasets/training data/day30-month09_time-13-03_training.jbl'
 # testing_file = './datasets/testing data/day30-month09_time-14-00_testing.jbl'
 training_file = './knn_training_data_masked.joblib'

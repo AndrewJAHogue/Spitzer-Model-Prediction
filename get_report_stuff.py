@@ -1,3 +1,6 @@
+"""_summary_
+    this file does things
+"""
 # %%
 import joblib
 import numpy as np
@@ -13,8 +16,8 @@ import modules.handy_dandy as hd
 data_dir = './datasets/testing data'
 # training_file = './datasets/training data/day30-month09_time-13-03_training.jbl'
 # testing_file = './datasets/testing data/day30-month09_time-14-00_testing.jbl'
-training_file = './knn_training_data_masked.joblib'
-testing_file = './knn_training_data.joblib'
+training_file = './datasets/knn_training_data_masked.joblib'
+testing_file =  './datasets/knn_training_data.joblib'
 
 training_data = joblib.load(training_file)
 testing_data = joblib.load(testing_file)

@@ -17,10 +17,11 @@ from modules.ajh_utils import handy_dandy as util
 import matplotlib.pyplot as plt
 import numpy as np
 
-# %%
-
 FILE_DIR = './datasets/MG/'
 FILENAME = 'MG0000n005_024.fits'
+
+# %%
+
 
 sigma = 20
 nsigma = 10
@@ -31,10 +32,8 @@ threshold = 10
 file_data = fits.getdata(f'{FILE_DIR}{FILENAME}')
 cutouts, headers = util.createCutoutsList(file_data)
 
-lplts.plot_gallery(cutouts, 50, 50, 10, 3)
 
 
-# %%
 ## move on to masking the sources
 
 from astropy.stats import SigmaClip
@@ -43,43 +42,7 @@ from photutils.segmentation import detect_sources, detect_threshold
 from photutils.utils import circular_footprint
 
 
-# %%
-input_data = cutouts[0]
-plt.imshow(input_data)
 
-# %%
-sigma_clip = SigmaClip(sigma=sigma, maxiters=10)
-threshold = detect_threshold(input_data, nsigma=nsigma, sigma_clip=sigma_clip)
-segment_img = detect_sources(input_data, threshold, npixels=5)
-footprint = circular_footprint(radius=radius)
-
-copy_data = np.copy(input_data)
-# copy_data = util.maskBackground(input_data, 50, sigma = sigma)
-
-# %%
-plt.imshow(copy_data)
-
-# %%
-
-
-mask = segment_img.make_source_mask(footprint=footprint)
-copy_data[mask] = np.NaN
-
-%matplotlib inline
-plt.imshow(copy_data)
-# %%
-
-xvalues, row = lplts.GetNthRow(input_data, 25)
-xvalues, col = lplts.GetNthColumn(input_data, 25)
-
-%matplotlib widget
-plt.plot(xvalues, row)
-
-##  masked data
-xvalues, row = lplts.GetNthRow(copy_data, 25)
-xvalues, col = lplts.GetNthColumn(copy_data, 25)
-
-plt.plot(xvalues, row)
 # %%
 
 ## model training on this 
@@ -152,9 +115,6 @@ def process_and_mask(file, **keywargs):
 
     return (file, processed_data , masked_data)
 
-
-processAndMask(f'{FILE_DIR}/{FILENAME}')
-
 # %%
 
 def trainModel(testing_data, training_data):
@@ -174,21 +134,25 @@ def trainModel(testing_data, training_data):
 
 # %%
 ## temp cell
-
 from astropy.stats import sigma_clipped_stats, SigmaClip
 from photutils.detection import DAOStarFinder
+def getSources(sigma): 
 
-data = fits.getdata(f'{FILE_DIR}/{FILENAME}')
-mean, med, std  = sigma_clipped_stats(data, sigma=sigma)
+    data = fits.getdata(f'{FILE_DIR}/{FILENAME}')
+    mean, med, std  = sigma_clipped_stats(data, sigma=sigma)
 
-dao = DAOStarFinder(fwhm = 5., threshold=5. * std)
-sources = dao(file_data - med)
+    dao = DAOStarFinder(fwhm = 5., threshold=5. * std)
+    sources = dao(data - med)
 
-for col in sources.colnames:
-    sources[col].info.format = '%.8g'
+    for col in sources.colnames:
+        sources[col].info.format = '%.8g'
 
-print(sources)
+    return sources
+
+
+
 # %%
+## deprecated
 from photutils.segmentation import detect_sources, detect_threshold
 from photutils.utils import circular_footprint
 
@@ -205,19 +169,33 @@ copy_data[mask] = np.NaN
 %matplotlib inline
 plt.imshow(copy_data)
 
-# %%
 ## go to each source and make a cutout
-training_cutouts = []
+training_cutouts_one= []
 testing_cutouts = []
+
 for s in sources:
     x = s['xcentroid']
     y = s['ycentroid']
 
     ## use the masked data
     masked = Cutout2D(copy_data, (x, y), 50).data
-    training_cutouts.append(masked)
+    training_cutouts_one.append(masked)
 
     testing = Cutout2D(data, (x, y), 50).data
     testing_cutouts.append(testing)
 
-lplts.plot_gallery(training_cutouts, 50, 50, 10, 3)
+lplts.plot_gallery(training_cutouts_one, 50, 50, 10, 3)
+
+
+
+# %%
+file_data = fits.getdata(f'{FILE_DIR}{FILENAME}')
+training, testing = util.createMaskedCutoutsList(file_data)
+lplts.plot_gallery(training, 50, 50, 10, 3)
+
+
+
+# %%
+output_filename = f'{ util.getFileName(FILENAME) }_cutouts_headers.jbl'
+with open(f'./datasets/cutouts/{output_filename}', 'wb') as f:
+    joblib.dump((training, testing), f)

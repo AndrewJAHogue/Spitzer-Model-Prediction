@@ -4,3 +4,4 @@ datasets
 *.pickle
 *.md
 *.*workspace
+*pyc

@@ -188,16 +188,24 @@ testing[np.isnan(testing)] = -1
 
 # filter out bad cutouts
 stats = sigma_clipped_stats(testing, sigma=sigma, stdfunc=np.nanstd)
-copy = np.copy(training)
+filtered_training = []
+filtered_testing = []
 print(f'{training.shape = }')
 for i, c in enumerate(training):
     mean = np.nanmean(c)
-    if mean > (stats[0] + stats[2]):
+    if mean < (stats[0] + stats[2]):
         with contextlib.suppress(IndexError):
-            copy = np.delete(copy, i, axis=0)
+            # copy = np.delete(copy, i, axis=0)
+            filtered_training.append(c)
+            filtered_testing.append(testing[i])
 
-copy = copy.reshape(-1, 2500)
-print(f'{copy.shape = }')
+filtered_training = np.array(filtered_training)
+filtered_training = filtered_training.reshape(-1, 2500)
+
+filtered_testing = np.array(filtered_testing)
+filtered_testing = filtered_testing.reshape(-1, 2500)
+print(f'{filtered_training.shape = }')
+
 
 # %%
 

@@ -165,8 +165,12 @@ radius = 1
 
 FILE_DIR = './datasets/MG/'
 FILENAME = 'MG0000n005_024.fits'
-set1 = tt.CreateFileSet(f'{FILE_DIR}{FILENAME}')
-# %%
+file = fits.open(f'{FILE_DIR}{FILENAME}')
+file_data = file[0].data
+file_data = file_data[:2500]
+
+set1 = tt.CreateFileSet(file_data)
+
 
 
 from sklearn.model_selection import train_test_split

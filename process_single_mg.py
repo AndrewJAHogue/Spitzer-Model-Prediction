@@ -157,6 +157,9 @@ def getSources(sigma):
 # %%
 import contextlib
 from modules.ModelTools import TrainingTools as tt
+from astropy.io import fits
+import matplotlib.pyplot as plt
+
 sigma = 3.
 nsigma = 10.
 fwhm = 10.
@@ -171,6 +174,8 @@ file_data = file_data[:2500]
 
 set1 = tt.CreateFileSet(file_data)
 
+# set1 = tt.CreateFileSet(f'{FILE_DIR}{FILENAME}')
+
 
 
 from sklearn.model_selection import train_test_split
@@ -181,12 +186,9 @@ from modules.ajh_utils import handy_dandy as util
 from modules.ajh_utils import lineplots as lplts
 import numpy as np
 from astropy.stats import sigma_clipped_stats
-import matplotlib.pyplot as plt
 
 # pull data out
 training, testing = set1.getData()
-training[np.isnan(training)] = -1
-testing[np.isnan(testing)] = -1
 # training = util.processData(training, sigma)
 # testing = util.processData(testing, sigma)
 
@@ -211,10 +213,13 @@ filtered_testing = filtered_testing.reshape(-1, 2500)
 print(f'{filtered_training.shape = }')
 
 
-# %%
+# filtered_training[np.isnan(filtered_training)] = 0
+# filtered_testing[np.isnan(filtered_testing)] = 0
+filtered_training = util.processData(filtered_training)
+filtered_testing = util.processData(filtered_testing)
 
-lplts.plot_gallery(set1.training_set, 50, 50, 5, 4)
-lplts.plot_gallery(training, 50, 50, 5, 4)
+# lplts.plot_gallery(set1.training_set, 50, 50, 5, 4)
+lplts.plot_gallery(filtered_training, 50, 50, 25, 4)
 # lplts.plot_gallery(testing, 50, 50, 1, 3)
 
 # %%
@@ -226,11 +231,11 @@ lplts.SingleLinePlot(25, 25, data=testing[0].reshape(50, 50))
 # %%
 
 x_train, x_test, y_train, y_test = train_test_split(
-    training, testing, test_size=0.3
+    filtered_training, filtered_training, test_size=0.3
 )
 
 knn = KNeighborsRegressor()
-knn.fit(training, testing)
+knn.fit(x_train, y_train)
 
 # rcv = RidgeCV()
 # rcv.fit(x_train, y_train)
@@ -240,7 +245,7 @@ knn.fit(training, testing)
 # %%
 
 pred = knn.predict(x_test)
-# pred = rcv.predict(x_test)
 lplts.plot_gallery(pred, 50, 50, 10, 3)
+# lplts.SingleLinePlot(25,25, data=pred[26].reshape(50, 50))
 
     

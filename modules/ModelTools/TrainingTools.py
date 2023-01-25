@@ -96,7 +96,7 @@ class DataSet:
 
         
 
-def CreateFileSet(filepath, **keywargs):
+def CreateFileSet(filepath_or_data, **keywargs):
     """ Automatically create a masked cutout lists from that image, and create a FileSet object from a fits file image. 
 
     Args:
@@ -117,7 +117,12 @@ def CreateFileSet(filepath, **keywargs):
     import numpy as np
 
 
-    file_data = getdata(filepath)
+    ## create a FileSet using a filepath for the method to open, or using a ndarray already opened
+    if type(filepath_or_data) == str():
+        file_data = getdata(filepath_or_data)
+    else:
+        file_data = filepath_or_data
+
     training, testing, headers = hd.createMaskedCutoutsList(file_data, sigma=sigma, nsigma=nsigma, fwhm=fwhm, threshold=threshold, radius=radius)
     
     ## convert to numpy arrays

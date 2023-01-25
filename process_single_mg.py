@@ -151,51 +151,84 @@ def getSources(sigma):
 
 
 
-# %%
-## deprecated
-from photutils.segmentation import detect_sources, detect_threshold
-from photutils.utils import circular_footprint
-
-sclip = SigmaClip(sigma=3, maxiters=10)
-threshold = detect_threshold(data, nsigma=nsigma, sigma_clip=sclip)
-seg_img = detect_sources(data, threshold, npixels=5)
-fprint = circular_footprint(radius=radius)
-
-mask = seg_img.make_source_mask(footprint=fprint)
-
-copy_data = np.copy(data)
-copy_data[mask] = np.NaN
-
-%matplotlib inline
-plt.imshow(copy_data)
-
-## go to each source and make a cutout
-training_cutouts_one= []
-testing_cutouts = []
-
-for s in sources:
-    x = s['xcentroid']
-    y = s['ycentroid']
-
-    ## use the masked data
-    masked = Cutout2D(copy_data, (x, y), 50).data
-    training_cutouts_one.append(masked)
-
-    testing = Cutout2D(data, (x, y), 50).data
-    testing_cutouts.append(testing)
-
-lplts.plot_gallery(training_cutouts_one, 50, 50, 10, 3)
 
 
 
 # %%
-file_data = fits.getdata(f'{FILE_DIR}{FILENAME}')
-training, testing = util.createMaskedCutoutsList(file_data)
-lplts.plot_gallery(training, 50, 50, 10, 3)
+import contextlib
+from modules.ModelTools import TrainingTools as tt
+sigma = 3.
+nsigma = 10.
+fwhm = 10.
+threshold = 5.
+radius = 1
 
+FILE_DIR = './datasets/MG/'
+FILENAME = 'MG0000n005_024.fits'
+set1 = tt.CreateFileSet(f'{FILE_DIR}{FILENAME}')
+# %%
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import RidgeCV
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.neighbors import  KNeighborsRegressor
+from modules.ajh_utils import handy_dandy as util
+from modules.ajh_utils import lineplots as lplts
+import numpy as np
+from astropy.stats import sigma_clipped_stats
+import matplotlib.pyplot as plt
+
+# pull data out
+training, testing = set1.getData()
+training[np.isnan(training)] = -1
+testing[np.isnan(testing)] = -1
+# training = util.processData(training, sigma)
+# testing = util.processData(testing, sigma)
+
+# filter out bad cutouts
+stats = sigma_clipped_stats(testing, sigma=sigma, stdfunc=np.nanstd)
+copy = np.copy(training)
+print(f'{training.shape = }')
+for i, c in enumerate(training):
+    mean = np.nanmean(c)
+    if mean > (stats[0] + stats[2]):
+        with contextlib.suppress(IndexError):
+            copy = np.delete(copy, i, axis=0)
+
+copy = copy.reshape(-1, 2500)
+print(f'{copy.shape = }')
+
+# %%
+
+lplts.plot_gallery(set1.training_set, 50, 50, 5, 4)
+lplts.plot_gallery(training, 50, 50, 5, 4)
+# lplts.plot_gallery(testing, 50, 50, 1, 3)
+
+# %%
+
+lplts.SingleLinePlot(25, 25, data=training[0].reshape(50, 50))
+lplts.SingleLinePlot(25, 25, data=testing[0].reshape(50, 50))
 
 
 # %%
-output_filename = f'{ util.getFileName(FILENAME) }_cutouts_headers.jbl'
-with open(f'./datasets/cutouts/{output_filename}', 'wb') as f:
-    joblib.dump((training, testing), f)
+
+x_train, x_test, y_train, y_test = train_test_split(
+    training, testing, test_size=0.3
+)
+
+knn = KNeighborsRegressor()
+knn.fit(training, testing)
+
+# rcv = RidgeCV()
+# rcv.fit(x_train, y_train)
+# score = rcv.score(x_test, y_test)
+# print(f'{score = }')
+
+# %%
+
+pred = knn.predict(x_test)
+# pred = rcv.predict(x_test)
+lplts.plot_gallery(pred, 50, 50, 10, 3)
+
+    

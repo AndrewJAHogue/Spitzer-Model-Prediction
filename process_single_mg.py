@@ -192,6 +192,26 @@ training, testing = set1.getData()
 # training = util.processData(training, sigma)
 # testing = util.processData(testing, sigma)
 
+# %%
+
+lplts.plot_gallery(training, 50, 50, 50, 5, stats=True)
+
+# %%
+## differentiate a cutout
+def FirstDerivative(input_data):
+    """ Return the first derivative of the 2darray. Appends np.nan after calculation to maintain (50,50) shape
+
+    Args:
+        input_data (2d ndarray): a (50,50) cutout
+
+    Returns:
+        _type_: _description_
+    """    
+    return np.diff(input_data, n=1, append=np.nan)
+# %%
+
+
+
 # filter out bad cutouts
 stats = sigma_clipped_stats(testing, sigma=sigma, stdfunc=np.nanstd)
 filtered_training = []

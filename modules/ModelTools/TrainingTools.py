@@ -64,7 +64,7 @@ class FileSet:
     def UpdateFileSetTime(self):
         from datetime import datetime
         dt = datetime.now()
-        self.date_modified.insert(0, dt.strftime(f'%c'))
+        self.date_modified.insert(0, dt.strftime('%c'))
 
 
 class DataSet:
@@ -111,6 +111,7 @@ def CreateFileSet(filepath_or_data, **keywargs):
     fwhm = keywargs.get('fwhm', 10.)
     threshold = keywargs.get('threshold', 5.)
     radius = keywargs.get('radius', 1.)
+    peak_percentage = keywargs.get('peak_percentage', 0.7)
 
     from astropy.io.fits import getdata
     from modules.ajh_utils import handy_dandy as hd
@@ -123,7 +124,13 @@ def CreateFileSet(filepath_or_data, **keywargs):
     else:
         file_data = filepath_or_data
 
-    training, testing, headers = hd.createMaskedCutoutsList(file_data, sigma=sigma, nsigma=nsigma, fwhm=fwhm, threshold=threshold, radius=radius)
+    training, testing, headers = hd.createMaskedCutoutsList(file_data,
+                                                            sigma=sigma,
+                                                            nsigma=nsigma,
+                                                            fwhm=fwhm,
+                                                            threshold=threshold,
+                                                            peak_percentage=peak_percentage,
+                                                            radius=radius)
     
     ## convert to numpy arrays
     # reshape the training and testing to 2d arrays

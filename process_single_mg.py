@@ -172,7 +172,7 @@ file = fits.open(f'{FILE_DIR}{FILENAME}')
 file_data = file[0].data
 file_data = file_data[:2500]
 
-set1 = tt.CreateFileSet(file_data)
+set1 = tt.CreateFileSet(file_data, peak_percentage=0.5)
 
 # set1 = tt.CreateFileSet(f'{FILE_DIR}{FILENAME}')
 
@@ -212,16 +212,16 @@ def FirstDerivative(input_data):
 
 
 
+perc_std = 1.5
 # filter out bad cutouts
-stats = sigma_clipped_stats(testing, sigma=sigma, stdfunc=np.nanstd)
+mean, med, std = sigma_clipped_stats(testing, sigma=sigma, stdfunc=np.nanstd)
 filtered_training = []
 filtered_testing = []
 print(f'{training.shape = }')
 for i, c in enumerate(training):
-    mean = np.nanmean(c)
-    if mean < (stats[0] + stats[2]):
+    c_mean = np.nanmean(c - med)
+    if c_mean < (mean - ( std * perc_std)):
         with contextlib.suppress(IndexError):
-            # copy = np.delete(copy, i, axis=0)
             filtered_training.append(c)
             filtered_testing.append(testing[i])
 
@@ -233,13 +233,27 @@ filtered_testing = filtered_testing.reshape(-1, 2500)
 print(f'{filtered_training.shape = }')
 
 
-# filtered_training[np.isnan(filtered_training)] = 0
-# filtered_testing[np.isnan(filtered_testing)] = 0
-filtered_training = util.processData(filtered_training)
-filtered_testing = util.processData(filtered_testing)
+# filtered_training[np.isnan(filtered_training)] = -1
+# filtered_testing[np.isnan(filtered_testing)] = -1
+# filtered_training = util.processData(filtered_training)
+# filtered_testing = util.processData(filtered_testing)
+
+
+
+if len(filtered_training) > 0:
+    lplts.plot_gallery(filtered_training, 50, 50, 50, 6, stats=True)
+
+
+# %%
+from sklearn.impute import KNNImputer
+
+c185 = filtered_training[185]
+imputer = KNNImputer(missing_values=np.NaN, n_neighbors=5)
+new_c = imputer.fit_transform(c185.reshape(50, 50))
+
+lplts.SingleLinePlot(25, 25, data=new_c)
 
 # lplts.plot_gallery(set1.training_set, 50, 50, 5, 4)
-lplts.plot_gallery(filtered_training, 50, 50, 25, 4)
 # lplts.plot_gallery(testing, 50, 50, 1, 3)
 
 # %%
@@ -254,7 +268,7 @@ x_train, x_test, y_train, y_test = train_test_split(
     filtered_training, filtered_training, test_size=0.3
 )
 
-knn = KNeighborsRegressor()
+knn = KNeighborsRegressor(n_neighbors=20)
 knn.fit(x_train, y_train)
 
 # rcv = RidgeCV()
@@ -265,7 +279,10 @@ knn.fit(x_train, y_train)
 # %%
 
 pred = knn.predict(x_test)
-lplts.plot_gallery(pred, 50, 50, 10, 3)
-# lplts.SingleLinePlot(25,25, data=pred[26].reshape(50, 50))
+lplts.plot_gallery(pred, 50, 50, 50, 4)
 
+
+# %%
+
+indeces_bad = [113, 114, 115, 117, 104, 105, 106, 107]
     

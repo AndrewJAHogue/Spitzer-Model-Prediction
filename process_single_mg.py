@@ -170,8 +170,9 @@ FILE_DIR = './datasets/MG/'
 FILENAME = 'MG0000n005_024.fits'
 file = fits.open(f'{FILE_DIR}{FILENAME}')
 file_data = file[0].data
+## --------------------FILE SPECIFIC MASK--------------------------------------------------------------------------------------------------------------------------
 file_data = file_data[:2500]
-
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 set1 = tt.CreateFileSet(file_data, peak_percentage=0.5)
 
 # set1 = tt.CreateFileSet(f'{FILE_DIR}{FILENAME}')
@@ -210,14 +211,15 @@ def FirstDerivative(input_data):
     return np.diff(input_data, n=1, append=np.nan)
 # %%
 
+## filter the masked training set based on the standard deviation, mean, and median of the whole training set
 
 
-perc_std = 1.5
+perc_std = 1.5 ## coefficient to mult standard deviation by
+
 # filter out bad cutouts
 mean, med, std = sigma_clipped_stats(testing, sigma=sigma, stdfunc=np.nanstd)
 filtered_training = []
 filtered_testing = []
-print(f'{training.shape = }')
 for i, c in enumerate(training):
     c_mean = np.nanmean(c - med)
     if c_mean < (mean - ( std * perc_std)):
@@ -225,64 +227,54 @@ for i, c in enumerate(training):
             filtered_training.append(c)
             filtered_testing.append(testing[i])
 
+## turn them from lists to np arrays
 filtered_training = np.array(filtered_training)
 filtered_training = filtered_training.reshape(-1, 2500)
 
 filtered_testing = np.array(filtered_testing)
 filtered_testing = filtered_testing.reshape(-1, 2500)
-print(f'{filtered_training.shape = }')
 
 
-# filtered_training[np.isnan(filtered_training)] = -1
-# filtered_testing[np.isnan(filtered_testing)] = -1
+
+# %%
+
+## run the training set through the processor method to impute the nans, so the model can handle the data
 # filtered_training = util.processData(filtered_training)
 # filtered_testing = util.processData(filtered_testing)
 
+## alternate imputation method
+filtered_training[np.isnan(filtered_training)] = -1
+filtered_testing[np.isnan(filtered_testing)] = -1
 
 
 if len(filtered_training) > 0:
     lplts.plot_gallery(filtered_training, 50, 50, 50, 6, stats=True)
 
-
-# %%
-from sklearn.impute import KNNImputer
-
-c185 = filtered_training[185]
-imputer = KNNImputer(missing_values=np.NaN, n_neighbors=5)
-new_c = imputer.fit_transform(c185.reshape(50, 50))
-
-lplts.SingleLinePlot(25, 25, data=new_c)
-
-# lplts.plot_gallery(set1.training_set, 50, 50, 5, 4)
-# lplts.plot_gallery(testing, 50, 50, 1, 3)
+print(f'{training.shape = }')
+print(f'{filtered_training.shape = }')
 
 # %%
 
-lplts.SingleLinePlot(25, 25, data=training[0].reshape(50, 50))
-lplts.SingleLinePlot(25, 25, data=testing[0].reshape(50, 50))
+lplts.GalleryRowLineCuts(filtered_training, 50, 50, 50, 6)
 
 
 # %%
 
 x_train, x_test, y_train, y_test = train_test_split(
-    filtered_training, filtered_training, test_size=0.3
+    filtered_training, filtered_testing, test_size=0.3
 )
 
-knn = KNeighborsRegressor(n_neighbors=20)
-knn.fit(x_train, y_train)
+# knn = KNeighborsRegressor()
+# knn.fit(x_train, y_train)
 
-# rcv = RidgeCV()
-# rcv.fit(x_train, y_train)
-# score = rcv.score(x_test, y_test)
-# print(f'{score = }')
+rcv = RidgeCV()
+rcv.fit(x_train, y_train)
+score = rcv.score(x_test, y_test)
+print(f'{score = }')
 
-# %%
 
-pred = knn.predict(x_test)
+# pred = knn.predict(x_test)
+pred = rcv.predict(x_test)
 lplts.plot_gallery(pred, 50, 50, 50, 4)
 
-
-# %%
-
-indeces_bad = [113, 114, 115, 117, 104, 105, 106, 107]
     

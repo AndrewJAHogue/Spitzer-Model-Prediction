@@ -5,3 +5,5 @@ datasets
 *.md
 *.*workspace
 *pyc
+.ipynb_checkpoints
+*.vim

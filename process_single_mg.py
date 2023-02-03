@@ -168,8 +168,55 @@ plot2.imshow(file_data)
 plot2.invert_yaxis()
 
 plt.show()
+
+# %%
+
+def getArcMin(ypixel, header):
+    from astropy.wcs import WCS
+    from astropy import units as u
+
+    wcs = WCS(header)
+
+    # xpixel coord does not matter here, as we only care about the y direction in this case
+    return wcs.pixel_to_world(0, ypixel).galactic.b.to(u.arcmin)
+
+
+def isNearGalCenter(ypixel, header):
+    arcmin = getArcMin(ypixel, header)
+
+
+    return arcmin.value > -20
+ 
+    
+# %%
+def getYMax(fits_file):
+    """ A method to find the max ypixel value, the closest we can get to the 
+    galactic center, without simply iterating over a multithousand range
+
+    Args:
+        fits_file (HDUList): the base fits.open object return
+
+    Returns:
+        int: The max of the fits image you can get before crossing our arbitrary 
+        "it's now the GC" line
+    """    
+    file_data = fits_file[0].data
+    ymax = file_data.shape[1] 
+    yhalf = ymax // 2
+    ystep = yhalf // 2
+
+    for y in range(yhalf, ystep + yhalf, 50):
+        if isNearGalCenter(y, fits_file[0].header):
+            return y
+
+    
+
+
+
+# %%
 ## --------------------FILE SPECIFIC MASK--------------------------------------------------------------------------------------------------------------------------
-file_data = file_data[:2500]
+# file_data = file_data[:2500]
+file_data = file_data[:getYMax(file)]
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 set1 = tt.CreateFileSet(file_data, peak_percentage=0.5)
 

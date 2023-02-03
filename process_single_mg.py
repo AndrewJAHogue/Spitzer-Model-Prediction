@@ -148,10 +148,26 @@ fwhm = 10.
 threshold = 5.
 radius = 1
 
-FILE_DIR = './datasets/MG/'
-FILENAME = 'MG0000n005_024.fits'
-file = fits.open(f'{FILE_DIR}{FILENAME}')
-file_data = file[0].data
+# %%
+
+from astropy.wcs import WCS
+
+
+wcs = WCS(file[0].header)
+# pt2 = wcs.pixel_to_world(3168, 3168).galactic
+
+%matplotlib widget
+ax = plt.subplot(121, projection = wcs)
+plt.imshow(file_data)
+
+overlay = ax.get_coords_overlay('galactic')
+overlay.grid(color='white', ls='dotted')
+
+plot2 = plt.subplot(122)
+plot2.imshow(file_data)
+plot2.invert_yaxis()
+
+plt.show()
 ## --------------------FILE SPECIFIC MASK--------------------------------------------------------------------------------------------------------------------------
 file_data = file_data[:2500]
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -132,24 +132,6 @@ def trainModel(testing_data, training_data):
     return rcv
 
 
-# %%
-## temp cell
-from astropy.stats import sigma_clipped_stats, SigmaClip
-from photutils.detection import DAOStarFinder
-def getSources(sigma): 
-
-    data = fits.getdata(f'{FILE_DIR}/{FILENAME}')
-    mean, med, std  = sigma_clipped_stats(data, sigma=sigma)
-
-    dao = DAOStarFinder(fwhm = 5., threshold=5. * std)
-    sources = dao(data - med)
-
-    for col in sources.colnames:
-        sources[col].info.format = '%.8g'
-
-    return sources
-
-
 
 
 

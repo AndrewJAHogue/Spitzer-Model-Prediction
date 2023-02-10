@@ -9,3 +9,4 @@ datasets
 *.vim
 GIT
 *.jukit
+*.session

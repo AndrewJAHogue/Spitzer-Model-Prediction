@@ -2,7 +2,11 @@
 
 
 # %%
+#|%%--%%| <JxJodmThWa|uxIZmlyuQa>
 
+%load_ext autoreload
+%reload_ext autoreload
+%autoreload 2
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 import joblib

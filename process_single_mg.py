@@ -8,23 +8,32 @@
 %reload_ext autoreload
 %autoreload 2
 from astropy.io import fits
-from astropy.nddata import Cutout2D
-import joblib
-import matplotlib
-from matplotlib import testing
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import train_test_split
-from modules import ajh_utils 
-# from modules import ajh_utils as util
 from modules.ajh_utils import lineplots as lplts
 from modules.ajh_utils import handy_dandy as util
 import matplotlib.pyplot as plt
 import numpy as np
+import contextlib
+from modules.ModelTools import TrainingTools as tt
+from astropy.io import fits
+import matplotlib.pyplot as plt
+from modules.ProcessingTools import FitsProcessing as fp
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import RidgeCV
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.neighbors import  KNeighborsRegressor
+from modules.ajh_utils import handy_dandy as util
+from modules.ajh_utils import lineplots as lplts
+import numpy as np
+from astropy.stats import sigma_clipped_stats
 
 FILE_DIR = './datasets/MG/'
 FILENAME = 'MG0000n005_024.fits'
+FILENAME_1 = 'MG0000p005_024.fits'
+FILENAME_2 = 'MG0000p015_024.fits'
 
-# %%
 
 
 sigma = 20
@@ -36,7 +45,16 @@ threshold = 10
 
 file = fits.open(f'{FILE_DIR}{FILENAME}')
 file_data = file[0].data
+file1 = fits.open(f'{FILE_DIR}{FILENAME_1}')
+file_data1 = file1[0].data
+file2 = fits.open(f'{FILE_DIR}{FILENAME_2}')
+file_data2 = file2[0].data
 # cutouts, headers = util.createCutoutsList(file_data)
+#|%%--%%| <uxIZmlyuQa|fYnYY8pxVI>
+
+plt.imshow(file_data2)
+#|%%--%%| <fYnYY8pxVI|p6A8wv1PuO>
+
 
 
 
@@ -151,14 +169,16 @@ from photutils.utils import circular_footprint
 # radius = 1
 
 # %%
+#|%%--%%| <p6A8wv1PuO|xMT9ARgukk>
 
 from astropy.wcs import WCS
+from astropy import units as u
 
 
 wcs = WCS(file[0].header)
 # pt2 = wcs.pixel_to_world(3168, 3168).galactic
 
-%matplotlib widget
+# %matplotlib inline 
 ax = plt.subplot(121, projection = wcs)
 plt.imshow(file_data)
 
@@ -172,176 +192,111 @@ plot2.invert_yaxis()
 plt.show()
 
 # %%
-
-def getArcMin(ypixel, header):
-    from astropy.wcs import WCS
-    from astropy import units as u
-
-    wcs = WCS(header)
-
-    # xpixel coord does not matter here, as we only care about the y direction in this case
-    return wcs.pixel_to_world(0, ypixel).galactic.b.to(u.arcmin)
-
-
-def isNearGalCenter(ypixel, header):
-    arcmin = getArcMin(ypixel, header)
-
-
-    return arcmin.value > -20
- 
-    
-def getYMax(fits_file):
-    """ A method to find the max ypixel value, the closest we can get to the 
-    galactic center, without simply iterating over a multithousand range
-
-    Args:
-        fits_file (HDUList): the base fits.open object return
-
-    Returns:
-        int: The max of the fits image you can get before crossing our arbitrary 
-        "it's now the GC" line
-    """    
-    file_data = fits_file[0].data
-    ymax = file_data.shape[1] 
-    yhalf = ymax // 2
-    ystep = yhalf // 2
-
-    for y in range(yhalf, ystep + yhalf, 50):
-        if isNearGalCenter(y, fits_file[0].header):
-            return y
-
-    
+#|%%--%%| <xMT9ARgukk|t0wSTX6pex>
 
 
 
+
+
+#|%%--%%| <t0wSTX6pex|db2rcjPs16>
 # %%
+
+
+#|%%--%%| <db2rcjPs16|qv9oFmsBmv>
+# %%
+
+#|%%--%%| <qv9oFmsBmv|iZicQTMuTW>
+# %%
+
+file = fits.open(f'{FILE_DIR}{FILENAME}')
+file_data = file[0].data
+file1 = fits.open(f'{FILE_DIR}{FILENAME_1}')
+file_data1 = file1[0].data
+# file2 = fits.open(f'{FILE_DIR}{FILENAME_2}')
+# file_data2 = file2[0].data
+
 ## --------------------FILE SPECIFIC MASK--------------------------------------------------------------------------------------------------------------------------
-# file_data = file_data[:2500]
-file_data = file_data[:getYMax(file)]
+file_data = fp.sliceImageProperly(file)
+file_data1 = fp.sliceImageProperly(file1)
 ## ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-set1 = tt.CreateFileSet(file_data, peak_percentage=0.5)
-
-# set1 = tt.CreateFileSet(f'{FILE_DIR}{FILENAME}')
 
 
-
-# %%
-
-
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import RidgeCV
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.neighbors import  KNeighborsRegressor
-from modules.ajh_utils import handy_dandy as util
-from modules.ajh_utils import lineplots as lplts
-import numpy as np
-from astropy.stats import sigma_clipped_stats
-
-# pull data out
+sigma = 0.
+# nsigma = 1000.
+fwhm = 10.
+threshold = 100.
+radius = 1
+set1 = tt.CreateFileSet(file_data2, peak_percentage=0.5, sigma=sigma,fwhm=fwhm, threshold=threshold)
 training, testing = set1.getData()
+print(f'{training.shape = }')
 
-lplts.plot_gallery(training, 50, 50, 10, 3)
+filtered_training, filtered_testing = fp.Filter((training, testing), .75, sigma)
+print(f'{filtered_training.shape = }')
+#|%%--%%| <iZicQTMuTW|07mdRkIJPs>
+
+
+lplts.plot_gallery(filtered_training, 50, 50, 50, 6, stats=True)
+
 
 # %%
-## differentiate a cutout
-def FirstDerivative(input_data):
-    """ Return the first derivative of the 2darray. Appends np.nan after calculation to maintain (50,50) shape
+#|%%--%%| <07mdRkIJPs|WTXcoIHOl2>
 
-    Args:
-        input_data (2d ndarray): a (50,50) cutout
+filtered_training = fp.SimpleProcessData(filtered_training, sigma)
+filtered_testing = fp.SimpleImpute(filtered_testing)
 
-    Returns:
-        _type_: _description_
-    """    
-    return np.diff(input_data, n=1, append=np.nan)
-
-
-## filter the masked training set based on the standard deviation, mean, and median of the whole training set
-
-def Filter(input_data, std_coefficient=1.5, sigma=3.):
-    """ Filter out cutouts that exceed the mean of the whole training set
-
-    Args:
-        input_data (tuple of two ndarrays): (input_training_set, input_testing_set) is a tuple of the training and testing data sets, which are both ndarrays containing (50,50) cutouts
-        std_coefficient (float, optional): The coefficient to multiply the standard deviation of the whole training set by. Defaults to 1.5.
-        sigma (float, optional): The sigma value used for sigma_clipped_stats. Defaults to 3..
-
-    Returns:
-        tuple of two ndarrays: A tuple of (training_set, testing_set) that have been filtered
-    """    
-    training = input_data[0]
-    testing = input_data[1]
-
-    # std_coefficient = 1.5 ## coefficient to mult standard deviation by
-
-    # filter out bad cutouts
-    mean, med, std = sigma_clipped_stats(input_data, sigma=sigma, stdfunc=np.nanstd)
-    filtered_training = []
-    filtered_testing = []
-    for i, c in enumerate(training):
-        c_mean = np.nanmean(c - med)
-        print('c_mean condition')
-        if c_mean < (mean - ( std * std_coefficient)):
-            with contextlib.suppress(IndexError):
-                filtered_training.append(c)
-                filtered_testing.append(testing[i])
-
-    ## turn them from lists to np arrays
-    filtered_training = np.array(filtered_training)
-    filtered_training = filtered_training.reshape(-1, 2500)
-
-    filtered_testing = np.array(filtered_testing)
-    filtered_testing = filtered_testing.reshape(-1, 2500)
-
-    return filtered_training, filtered_testing
-
-
-filtered_training, filtered_testing = Filter((training, testing), 1.5, sigma)
-
-lplts.plot_gallery(filtered_training, 50, 50, 5, 6, stats=True)
-
-## alternate imputation method
-# filtered_training[np.isnan(filtered_training)] = -1
-# filtered_testing[np.isnan(filtered_testing)] = -1
-# %%
-
-
-def SimpleImpute(input_data):
-    from numpy import isnan
-
-    input_data[isnan(input_data)] = -1
-    
-def SimpleProcessData(input_data, sigma):
-    from modules.ajh_utils import handy_dandy as hd
-    SimpleImpute(input_data)
-    return hd.maskBackground(input_data, (50,50), sigma)
-
-
-filtered_training = SimpleProcessData(filtered_training, sigma)
-
-if len(filtered_training) > 0:
-    lplts.plot_gallery(filtered_training, 50, 50, 5, 6, stats=True)
+lplts.plot_gallery(filtered_training, 50, 50, 50, 6, stats=True)
 
 print(f'{training.shape = }')
 print(f'{filtered_training.shape = }')
 
 
 # %%
+#|%%--%%| <WTXcoIHOl2|LsKxDuPY5z>
+
 
 x_train, x_test, y_train, y_test = train_test_split(
-    filtered_training, filtered_testing, test_size=0.3
+    filtered_training, filtered_testing, test_size=0.2
 )
 
-rcv = RidgeCV()
-rcv.fit(x_train, y_train)
-score = rcv.score(x_test, y_test)
+# rcv = RidgeCV()
+# rcv.fit(x_train, y_train)
+# score = rcv.score(x_test, y_test)
+# print(f'{score = }')
+
+## using knn
+
+knn = KNeighborsRegressor()
+knn.fit(x_train, y_train)
+score = knn.score(x_test, y_test)
 print(f'{score = }')
 
+
+
 # %%
+#|%%--%%| <LsKxDuPY5z|a1iNC0Ont6>
 
 
-pred = rcv.predict(x_test)
-%matplotlib inline
+pred = knn.predict(x_test)
 lplts.plot_gallery(pred, 50, 50, 50, 4, stats=True)
+plt.show()
+
+
+
+#|%%--%%| <a1iNC0Ont6|SD5axJzRIo>
+
+
+
+
+def Stats(input_data, sigma):
+    """
+    return mean, median, std
+    """
+    from numpy import nanstd
+    from astropy.stats import sigma_clipped_stats
+
+
+    return sigma_clipped_stats(input_data, sigma=sigma, stdfunc=nanstd)
+
+

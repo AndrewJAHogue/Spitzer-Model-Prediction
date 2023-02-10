@@ -5,6 +5,7 @@ datasets
 *.md
 *.*workspace
 *pyc
-.ipynb_checkpoints
+*.ipynb_checkpoints
 *.vim
 GIT
+*.jukit

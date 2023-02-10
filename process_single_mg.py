@@ -49,110 +49,106 @@ from photutils.utils import circular_footprint
 
 
 
-# %%
+# # %%
 
-## model training on this 
+# ## model training on this 
 
-def processAndMask(file, **keywargs):
-    """_summary_
+# def processAndMask(file, **keywargs):
+#     """_summary_
 
-    Args:
-        file (string) : string file path to joblib file of (cutouts, headers)
-        sigma (int) : 
-        radius (int) :
-        nsigma (int) :
-
-
-    Returns:
-        tuple[3] : (string file path, processed_data, masked_data)
-    """    
-
-    sigma = keywargs.get('sigma', 3)
-    radius  = keywargs.get('radius', 10)
-    nsigma = keywargs.get('nsigma', 10)
-
-    import time
-
-    time.sleep(1)
-    try:
-        return process_and_mask(file, sigma=sigma, nsigma=nsigma, radius=radius)
-    except:
-        print(f'{file} failed')
+#     Args:
+#         file (string) : string file path to joblib file of (cutouts, headers)
+#         sigma (int) : 
+#         radius (int) :
+#         nsigma (int) :
 
 
-def process_and_mask(file, **keywargs):
-    """_summary_
+#     Returns:
+#         tuple[3] : (string file path, processed_data, masked_data)
+#     """    
 
-    Args:
-        file (string) : string file path to joblib file of (cutouts, headers)
-        sigma (int) : 
-        radius (int) :
-        nsigma (int) :
+#     sigma = keywargs.get('sigma', 3)
+#     radius  = keywargs.get('radius', 10)
+#     nsigma = keywargs.get('nsigma', 10)
 
+#     import time
 
-    Returns:
-        tuple[3] : (string file path, processed_data, masked_data)
-    """    
-
-    from modules.ajh_utils import handy_dandy as hd
-
-    sigma = keywargs.get('sigma', 3)
-    radius  = keywargs.get('radius', 10)
-    nsigma = keywargs.get('nsigma', 10)
-
-    print(f'{file} loaded')
-    if '.jbl' in file or '.joblib' in file:
-        data, headers = joblib.load(f'{file}')
-    elif '.fits' in file:
-        file_data = fits.getdata(file)
-        data, headers = hd.createCutoutsList(file_data)
-    else:
-        raise AttributeError(f'{ file } is not an accepted file extension type')
-        
-    
-
-    processed_data = []
-    masked_data = []
-    processed_data = util.processData(data.reshape(-1,1) )
-    processed_data = processed_data.reshape(-1, 50, 50)
-
-    masked_data = hd.mask_sources(processed_data, sigma=sigma, nsigma=nsigma, radius=radius)
+#     time.sleep(1)
+#     try:
+#         return process_and_mask(file, sigma=sigma, nsigma=nsigma, radius=radius)
+#     except:
+#         print(f'{file} failed')
 
 
-    return (file, processed_data , masked_data)
+# def process_and_mask(file, **keywargs):
+#     """_summary_
 
-# %%
-
-def trainModel(testing_data, training_data):
-    # reshape the data
-    testing_data = testing_data.reshape(-1, 2500)
-    training_data = training_data.reshape(-1, 2500)
-
-    # split data up
-    input_train, input_test, output_train, output_test = train_test_split(training_data, testing_data, test_size=0.2, shuffle=False)
-
-    # use the RidgeCV model
-    rcv = RidgeCV()
-    rcv.fit(input_train, output_train)
-
-    return rcv
+#     Args:
+#         file (string) : string file path to joblib file of (cutouts, headers)
+#         sigma (int) : 
+#         radius (int) :
+#         nsigma (int) :
 
 
+#     Returns:
+#         tuple[3] : (string file path, processed_data, masked_data)
+#     """    
+
+#     from modules.ajh_utils import handy_dandy as hd
+
+#     sigma = keywargs.get('sigma', 3)
+#     radius  = keywargs.get('radius', 10)
+#     nsigma = keywargs.get('nsigma', 10)
+
+#     print(f'{file} loaded')
+#     if '.jbl' in file or '.joblib' in file:
+#         data, headers = joblib.load(f'{file}')
+#     elif '.fits' in file:
+#         file_data = fits.getdata(file)
+#         data, headers = hd.createCutoutsList(file_data)
+#     else:
+#         raise AttributeError(f'{ file } is not an accepted file extension type')
+#         
+#     
+
+#     processed_data = []
+#     masked_data = []
+#     processed_data = util.processData(data.reshape(-1,1) )
+#     processed_data = processed_data.reshape(-1, 50, 50)
+
+#     masked_data = hd.mask_sources(processed_data, sigma=sigma, nsigma=nsigma, radius=radius)
+
+
+#     return (file, processed_data , masked_data)
+
+# # %%
+
+# def trainModel(testing_data, training_data):
+#     # reshape the data
+#     testing_data = testing_data.reshape(-1, 2500)
+#     training_data = training_data.reshape(-1, 2500)
+
+#     # split data up
+#     input_train, input_test, output_train, output_test = train_test_split(training_data, testing_data, test_size=0.2, shuffle=False)
+
+#     # use the RidgeCV model
+#     rcv = RidgeCV()
+#     rcv.fit(input_train, output_train)
+
+#     return rcv
 
 
 
 
-# %%
-import contextlib
-from modules.ModelTools import TrainingTools as tt
-from astropy.io import fits
-import matplotlib.pyplot as plt
 
-sigma = 3.
-nsigma = 10.
-fwhm = 10.
-threshold = 5.
-radius = 1
+
+# # %%
+
+# sigma = 3.
+# nsigma = 10.
+# fwhm = 10.
+# threshold = 5.
+# radius = 1
 
 # %%
 

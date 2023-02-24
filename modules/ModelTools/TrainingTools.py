@@ -39,7 +39,7 @@ class FileSet:
 
     # class
 
-    def saveFileSet(self, filename):
+        return [f.fwhm for f in self.test]
         import joblib
         from modules.ajh_utils import handy_dandy as hd
 

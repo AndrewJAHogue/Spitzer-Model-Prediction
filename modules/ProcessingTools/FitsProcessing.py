@@ -157,12 +157,13 @@ def isYpixNearGalCenter(ypixel, fits_file):
         return False
 
 
-# def getInversePixels(fits_file):
-#     from astropy.wcs import WCS
-#     from astropy import units as u
+def isFileWithoutGC(fits_file):
+    a = isYpixNearGalCenter(0, fits_file)
+    b = isYpixNearGalCenter(fits_file[0].data.shape[1]//2, fits_file)
+    c = isYpixNearGalCenter(fits_file[0].data.shape[1], fits_file)
 
-#     wcs = WCS(file[0].header)
-#     return wcs.pixel_to_world_values(0, range(0, fits_file[0].data.shape[1], 1 ))
+    if a == False and b == False and c == False:
+        return True
 
     
 def getYMax(fits_file):

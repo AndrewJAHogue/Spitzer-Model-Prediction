@@ -15,7 +15,7 @@ def FirstDerivative(input_data):
 
 ## filter the masked training set based on the standard deviation, mean, and median of the whole training set
 
-def Filter(input_data, std_coefficient=1.5, sigma=3.):
+def Filter(training, testing,  **keywargs):
     """ Filter out cutouts that exceed the mean of the whole training set
 
     Args:
@@ -119,18 +119,18 @@ def FilterFirstDerivative(training, testing, std_coefficient=1.5, sigma=3.):
 def invertPixelIndex(ypixel, ymax):
     return ymax - ypixel
 
-def getGalDegree(ypixel, fits_file):
+def getGalDegree(xpixel, ypixel, fits_file):
     from astropy.wcs import WCS
-    from astropy import units as u
-
-    # ymax = fits_file[0].data.shape[1]
 
     wcs = WCS(fits_file[0].header)
-
-    deg = lambda ypixel : wcs.pixel_to_world(0, ypixel).galactic.b.ddeg
-
+    deg = wcs.pixel_to_world(xpixel, ypixel).galactic
     # xpixel coord does not matter here, as we only care about the y direction in this case
-    return deg(ypixel)
+    return ( deg.l.value, deg.b.value )
+    
+
+def getYGalDegree(ypixel, fits_file):
+    # xpixel coord does not matter here, as we only care about the y direction in this case
+    return getGalDegree(0, ypixel, fits_file)[1]
 
 def isRightSideUp(fits_file):
     """ Check if the 'top' of the image's yaxis (axis=0) is the GC, otherwise return an 
@@ -140,22 +140,18 @@ def isRightSideUp(fits_file):
     Args:
         fits_file (HDU object): an HDU object returned from fits.open
     """
-    beginning = getGalDegree(0, fits_file)
-    end = getGalDegree(fits_file[0].data.shape[1], fits_file)
+    beginning = getYGalDegree(0, fits_file)
+    end = getYGalDegree(fits_file[0].data.shape[1], fits_file)
 
     return beginning**2 > end**2
 
 
 def isYpixNearGalCenter(ypixel, fits_file):
-    b = getGalDegree(ypixel, fits_file)**2
+    b = getYGalDegree(ypixel, fits_file)**2
 
 
     ## based on pixel value 2000 for fits_file MG0000n005_025.fits
-    if b < 12.:
-        return True
-    else:
-        return False
-
+    return b < .0721377
 
 def isFileWithoutGC(fits_file):
     a = isYpixNearGalCenter(0, fits_file)
@@ -197,12 +193,13 @@ def getYMax(fits_file):
 def sliceImageProperly(fits_file):
     file_data = fits_file[0].data
 
-    if isRightSideUp(fits_file):
-        file_data = file_data[:getYMax(fits_file)]
-    else:
-        file_data = file_data[getYMax(fits_file):]
+    if isFileWithoutGC(fits_file):
+        return file_data
 
-    return file_data
+    if isRightSideUp(fits_file):
+        return file_data[:getYMax(fits_file)]
+    else:
+        return file_data[getYMax(fits_file):]
     
 
 
@@ -220,3 +217,35 @@ def SimpleProcessData(input_data, sigma):
     return hd.maskBackground(input_data, (50,50), sigma)
 
 
+        
+
+class FWHMinfo:
+    def __init__(self, l, b, fwhm):
+        self.l = l
+        self.b = b
+        self.fwhm = fwhm
+        
+    def getData(self):
+        return {
+            "l": self.l,
+            "b" : self.b,
+            "fwhm" : self.fwhm 
+                }
+
+
+def getFWHM(t ):
+    from modules.ajh_utils import handy_dandy as hd
+    
+    try:
+        f = hd.get_fwhm(t)
+    except ValueError:
+        f = np.NaN
+        
+    return f
+
+def getFWHMobj(t, i, dataset, file):
+    headers = dataset.headers
+    xpixel,ypixel = headers[i].input_position_original
+    l,b = getGalDegree(xpixel, ypixel, file)
+
+    return FWHMinfo(l, b, getFWHM(t))

@@ -1,34 +1,40 @@
 
+import enum
+from multiprocessing.sharedctypes import Value
 import numpy as np
 
 
 class FileSet:
-    def __init__(self, training_testing_headers, sigma, nsigma, fwhm, threshold, radius):
+    def __init__(self, training_testing_headers_fwhms, source_filename, sigma, nsigma, fwhm, threshold, radius):
         """A class to contain all processed cutouts of a single fits file and what values were used to process them
 
         Args:
-            training_testing_headers (tuple of three ndarray): tuple of (training, testing, headers), where the training list is a list containing many (50, 50) lists that will be used as the training data
+            training_testing_headers_fwhms (tuple of four ndarray): tuple of (training, testing, headers, fwhms), where the training list is a list containing many (50, 50) lists that will be used as the training data
             sigma (float): sigma value used in the DAOStarFinder algorithm to find the stars in the file
             fwhm (float): fwhm value used in the DAOStarFinder algorithm to find the stars in the file
             threshold (float): filter results beyond this limit
         """        
-        self.training_set = training_testing_headers[0]
-        self.testing_set = training_testing_headers[1]
-        self.headers = training_testing_headers[2]
+        from modules.ajh_utils import handy_dandy as hd
+        self.training_set = training_testing_headers_fwhms[0]
+        self.testing_set = training_testing_headers_fwhms[1]
+        self.headers = training_testing_headers_fwhms[2]
+        self.fwhms = training_testing_headers_fwhms[3]
         self.sigma = sigma
         self.nsigma = nsigma
         self.radius = radius
         self.fwhm = fwhm
         self.threshold = threshold
+        self.source_filename = hd.getFileName( source_filename )
+        self.test = self.source_filename
 
         from datetime import datetime
         dt = datetime.now()
-        time_str = dt.strftime(f'%c')
-        
+        time_str = dt.strftime('%c')
+
         self.date_created = time_str
         self.date_modified = [ time_str ]
 
-        self.saved_filename = ''
+        # self.saved_filename = ''
 
     def getData(self):
         return np.copy(( self.training_set, self.testing_set ))
@@ -39,17 +45,19 @@ class FileSet:
 
     # class
 
+    def getFWHMS(self):
         return [f.fwhm for f in self.test]
+
+    def saveFileSet(self):
         import joblib
-        from modules.ajh_utils import handy_dandy as hd
 
         self.UpdateFileSetTime()
         
-        output_filename = f'{ hd.getFileName(filename) }_training_testing_headers.jbl'
+        output_filename = f'{ hd.getFileName(self.source_filename) }_training_testing_headers.jbl'
         with open(f'./datasets/cutouts/{output_filename}', 'wb') as f:
             joblib.dump(self, f)
 
-        self.saved_filename = output_filename
+        # self.saved_filename = output_filename
 
     def plotAllTesting(self):
         from modules.ajh_utils import lineplots as lplts
@@ -61,15 +69,28 @@ class FileSet:
 
         lplts.plot_gallery(self.training_set, 50, 50, 10, 3)
        
+
+    def __calcNumBins(self):
+        fwhms = self.getFWHMS()
+        n = len(fwhms)
+        intRange = np.nanmax(fwhms) - np.nanmin(fwhms)
+        intervals = np.sqrt(n)
+        
+        return range(0, int(np.round(intRange)), int(np.round(intervals)))
+
+        
+               
+    def plotFWHMHist(self):
+        import pandas as pd
+
+        pd.DataFrame(self.getFWHMS()).hist()
+       
     def UpdateFileSetTime(self):
         from datetime import datetime
         dt = datetime.now()
         self.date_modified.insert(0, dt.strftime('%c'))
 
-
-class DataSet:
-    def __init__(self, FileSetArray):
-        self.data = FileSetArray
+    
 
 
 # class DataSet:
@@ -146,6 +167,23 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
     testing = np.array(testing).reshape(-1, 2500)
     headers = np.array(headers)
 
-    print(f'Created FileSet with parameters:\n{sigma = }\n{nsigma = }\n{radius = }\n{fwhm = }\n{threshold = }')
-    return FileSet((training, testing, headers), sigma, nsigma, fwhm, threshold, radius)
+
+    # from codetiming import Timer
+
+    # timer = Timer(name="class")
+    # timer.start()
+    # fwhms = []
+    # for i,t in enumerate( testing ):
+    #     try:
+    #         f = hd.get_fwhm(t)
+    #     except ValueError:
+    #         f = np.NaN
+            
+    #     pos = headers[i].input_position_original
+    #     fwhms.append((pos, f))
+
+    fwhms = []
+    # timer.stop()
+    print(f'Created FileSet with parameters:\n{sigma = }\n{nsigma = }\n{radius = }\n{fwhm = }\n{threshold = }\nfrom source {filename}')
+    return FileSet((training, testing, headers, fwhms), filename, sigma, nsigma, fwhm, threshold, radius)
 

@@ -101,7 +101,7 @@ class DataSet:
 
         
 
-def CreateFileSet(filepath_or_data, **keywargs):
+def CreateFileSet(filepath_or_data,filename, **keywargs):
     """ Automatically create a masked cutout lists from that image, and create a FileSet object from a fits file image. 
 
     Args:
@@ -128,6 +128,9 @@ def CreateFileSet(filepath_or_data, **keywargs):
         file_data = getdata(filepath_or_data)
     else:
         file_data = filepath_or_data
+
+    if filename is None or type(filename) is not str:
+        raise ValueError(f"filename {filename} is incorrect or empty")
 
     training, testing, headers = hd.createMaskedCutoutsList(file_data,
                                                             sigma=sigma,

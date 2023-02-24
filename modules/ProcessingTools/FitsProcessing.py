@@ -27,28 +27,40 @@ def Filter(input_data, std_coefficient=1.5, sigma=3.):
         tuple of two ndarrays: A tuple of (training_set, testing_set) that have been filtered
     """    
 
+    derivfilterfunc = keywargs.get('derivfilterfunc')
+    std_coefficient = keywargs.get('std_coefficient', 1.)
+    sigma = keywargs.get('sigma', 0.)
+
+
     from astropy.stats import sigma_clipped_stats
     import contextlib
 
-    training = input_data[0]
-    testing = input_data[1]
-
-    # std_coefficient = 1.5 ## coefficient to mult standard deviation by
-
+    ## optional argument to perform a differential on the input data
+    ## otherwise, just keep the data untouched
+    if derivfilterfunc is None:
+        derivfilterfunc = lambda a : a
+        
     # filter out bad cutouts
     if sigma == 0:
-        mean, med, std = sigma_clipped_stats(input_data, stdfunc=np.nanstd)
+        mean, med, std = sigma_clipped_stats(derivfilterfunc( training ), stdfunc=np.nanstd)
     else:
-        mean, med, std = sigma_clipped_stats(input_data, sigma=sigma, stdfunc=np.nanstd)
+        mean, med, std = sigma_clipped_stats(derivfilterfunc( training ), sigma=sigma, stdfunc=np.nanstd)
 
     filtered_training = []
     filtered_testing = []
     for i, c in enumerate(training):
-        c_mean = np.nanmean(c - med)
-        if c_mean <= (mean - ( std * std_coefficient)):
-            with contextlib.suppress(IndexError):
-                filtered_training.append(c)
-                filtered_testing.append(testing[i])
+        c_mean = np.nanmean(derivfilterfunc( c ) - med)
+        if derivfilterfunc is None:
+            if c_mean <= (mean - ( std * std_coefficient)):
+                with contextlib.suppress(IndexError):
+                    filtered_training.append(c)
+                    filtered_testing.append(testing[i])
+        else:
+            if c_mean >= (mean - ( std * std_coefficient)):
+                with contextlib.suppress(IndexError):
+                    filtered_training.append(c)
+                    filtered_testing.append(testing[i])
+
 
     ## turn them from lists to np arrays
     filtered_training = np.array(filtered_training)
@@ -59,6 +71,47 @@ def Filter(input_data, std_coefficient=1.5, sigma=3.):
 
     return filtered_training, filtered_testing
 
+def FilterFirstDerivative(training, testing, std_coefficient=1.5, sigma=3.):
+    """ Filter out cutouts that exceed the mean of the first derivative whole training set
+
+    Args:
+        training (ndarray): (input_training_set, input_testing_set) is a tuple of the training and testing data sets, which are both ndarrays containing (50,50) cutouts
+        std_coefficient (float, optional): The coefficient to multiply the standard deviation of the whole training set by. Defaults to 1.5.
+        sigma (float, optional): The sigma value used for sigma_clipped_stats. Defaults to 3..
+
+    Returns:
+        tuple of two ndarrays: A tuple of (training_set, testing_set) that have been filtered
+    """    
+
+    from astropy.stats import sigma_clipped_stats
+    import contextlib
+
+
+    # filter out bad cutouts
+    if sigma == 0:
+        mean, med, std = sigma_clipped_stats(FirstDerivative(training), stdfunc=np.nanstd)
+    else:
+        mean, med, std = sigma_clipped_stats(FirstDerivative(training), sigma=sigma, stdfunc=np.nanstd)
+
+
+
+    filtered_training = []
+    filtered_testing = []
+    for i, c in enumerate(training):
+        c_diff = (FirstDerivative(c))
+        c_mean = np.nanmean(c_diff - med)
+        if c_mean >= (mean - ( std * std_coefficient)):
+            with contextlib.suppress(IndexError):
+                filtered_training.append(c)
+                filtered_testing.append(testing[i])
+
+    ## turn them from lists to np arrays
+    filtered_training = np.array(filtered_training)
+    filtered_training = filtered_training.reshape(-1, 2500)
+
+    filtered_testing = np.array(filtered_testing)
+    filtered_testing = filtered_testing.reshape(-1, 2500)
+    return filtered_training, filtered_testing
 
 
 

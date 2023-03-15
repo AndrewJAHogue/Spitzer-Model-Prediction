@@ -244,57 +244,8 @@ print(f'{filtered_training.shape = }')
 
 # set1.saveFileSet()
 
-# %%
-
-from codetiming import Timer
-
-timer = Timer(name="class")
-timer.start()
-fwhms = []
-for i,t in enumerate( testing ):
-    try:
-        f = hd.get_fwhm(t)
-    except ValueError:
-        f = np.NaN
-        
-    pos = set1.headers[i].input_position_original
-    fwhms.append((pos, f))
-
-timer.stop()
-
 
 #|%%--%%| <iZicQTMuTW|07mdRkIJPs>
-
-from codetiming import Timer
-timer = Timer(name="class")
-timer.start()
-
-fwhms = []
-# for i,t in enumerate( testing ):
-def fwhm(t, i):
-    try:
-        f = hd.get_fwhm(t)
-    except ValueError:
-        f = np.NaN
-        
-    pos = set1.headers[i].input_position_original
-    fwhms.append((pos, f))
-
-from multiprocess import pool
-
-with pool.Pool(processes=4) as p:
-    results = [p.apply_async(fwhm, args=(t,i,)) for i,t in enumerate(testing)]
-
-    print(results[0].get())
-timer.stop()
-
-
-# %%
-
-
-
-lplts.plot_gallery(filtered_training, 50, 50, 5, 5, stats=True)
-
 
 # %%
 #|%%--%%| <07mdRkIJPs|WTXcoIHOl2>
@@ -337,7 +288,7 @@ plt.show()
 
 
 
-#|%%--%%| <a1iNC0Ont6|SD5axJzRIo>
+#|%%--%%| <WTXcoIHOl2|SD5axJzRIo>
 
 
 
@@ -357,53 +308,6 @@ def Stats(input_data, sigma):
 
 # %%
 
-from astropy.stats import sigma_clipped_stats
-
-print(sigma_clipped_stats( file_data, stdfunc=np.nanstd ))
-# %%
-
-std_coefficient = 1
-sigma = 0
-filterfunc = lambda a : fp.FirstDerivative(a)
-# filterfunc = lambda a : a
-
-from astropy.stats import sigma_clipped_stats
-import contextlib
-
-
-# filter out bad cutouts
-if sigma == 0:
-    mean, med, std = sigma_clipped_stats(filterfunc(training), stdfunc=np.nanstd)
-else:
-    mean, med, std = sigma_clipped_stats(filterfunc(training), sigma=sigma, stdfunc=np.nanstd)
-
-print(f'{mean = }')
-
-
-filtered_training = []
-filtered_testing = []
-for i, c in enumerate(training):
-    c_diff = (filterfunc(c))
-    c_mean = np.nanmean(c_diff - med)
-    print(f'{i = }')
-    print(f'{c_mean = }')
-    if c_mean >= (mean - ( std * std_coefficient)):
-        with contextlib.suppress(IndexError):
-            filtered_training.append(c)
-            filtered_testing.append(testing[i])
-
-    if i > 4:
-        break
-## turn them from lists to np arrays
-filtered_training = np.array(filtered_training)
-filtered_training = filtered_training.reshape(-1, 2500)
-
-filtered_testing = np.array(filtered_testing)
-filtered_testing = filtered_testing.reshape(-1, 2500)
-lplts.plot_gallery(filtered_training, 50, 50, 1, 6, stats=True)
-
-# %%
-
 filtered = fp.Filter(training, testing, std_coefficient=10e10, sigma=0, derivfilterfunc=fp.FirstDerivative)[0]
 print(f'{training.shape = }')
 print(f'{filtered.shape = }')
@@ -417,49 +321,6 @@ lplts.plot_gallery(filtered, 50, 50, 1, 6, stats=True)
 
 
 # %%
-
-# def Train(fits_file):
-#     from sklearn.model_selection import train_test_split
-#     from modules.ProcessingTools import FitsProcessing as fp
-#     from sklearn.neighbors import  KNeighborsRegressor
-
-#     file_data = fits_file[0].data
-#     # slice it up
-#     file_data = fp.sliceImageProperly(fits_file)
-
-
-#     sigma = 0.
-#     # nsigma = 1000.
-#     fwhm = 10.
-#     threshold = 10.
-#     radius = 1
-#     set1 = tt.CreateFileSet(file_data, peak_percentage=0.5, sigma=sigma,fwhm=fwhm, threshold=threshold)
-#     training, testing = set1.getData()
-#     print(f'{training.shape = }')
-
-#     filtered_training, filtered_testing = fp.Filter(training, testing, std_coefficient=1, sigma=0)
-#     print(f'{filtered_training.shape = }')
-        
-#     filtered_training = fp.SimpleProcessData(filtered_training, sigma)
-#     filtered_testing = fp.SimpleImpute(filtered_testing)
-
-#     x_train, x_test, y_train, y_test = train_test_split(
-#         filtered_training, filtered_testing, test_size=0.2
-#     )
-
-
-
-#     knn = KNeighborsRegressor()
-#     knn.fit(x_train, y_train)
-#     score = knn.score(x_test, y_test)
-#     print(f'{score = }')
-
-
-
-#     pred = knn.predict(x_test)
-#     lplts.plot_gallery(pred, 50, 50, 50, 4, stats=True)
-#     plt.show()
-
 # import os
 
 # files = os.listdir(FILE_DIR)
@@ -472,12 +333,12 @@ lplts.plot_gallery(filtered, 50, 50, 1, 6, stats=True)
 
 # %%
 
-import dill
-import joblib
+# import dill
+# import joblib
 
-all_jbls = os.listdir('./datasets/cutouts/jbls')
+# all_jbls = os.listdir('./datasets/cutouts/jbls')
 
-for f in all_jbls:
-    dataset = joblib.load(f'./datasets/cutouts/jbls/{f}')
-    with open(f'./datasets/cutouts/dills/{f}.dill', 'wb') as d:
-        dill.dump(dataset, d)
+# for f in all_jbls:
+#     dataset = joblib.load(f'./datasets/cutouts/jbls/{f}')
+#     with open(f'./datasets/cutouts/dills/{f}.dill', 'wb') as d:
+#         dill.dump(dataset, d)

@@ -101,11 +101,14 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
     radius = keywargs.get('radius', 1.)
     peak_percentage = keywargs.get('peak_percentage', 0.7)
 
-    from astropy.io.fits import getdata
+    from astropy.io import fits
     from modules.ajh_utils import handy_dandy as hd
     import numpy as np
+    from modules.ProcessingTools import FitsProcessing as fp
 
 
+    # print('checking filepath_or_data type')
+    # ## create a FileSet using a filepath for the method to open, or using a ndarray already opened
     if type(filepath_or_data) == type(str()):
         print('it is a string')
     #     ## only run this block if the argument is a filepath string
@@ -125,6 +128,7 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
     if filename is None or type(filename) is not str:
         raise ValueError(f"filename {filename} is incorrect or empty")
 
+
     training, testing, headers = hd.createMaskedCutoutsList(file_data,
                                                             sigma=sigma,
                                                             nsigma=nsigma,
@@ -139,6 +143,10 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
     testing = np.array(testing).reshape(-1, 2500)
     headers = np.array(headers)
 
+
+    fwhms = []
+    print(f'Created FileSet with parameters:\n{sigma = }\n{nsigma = }\n{radius = }\n{fwhm = }\n{threshold = }\nfrom source {filename}', flush=True)
+    return FileSet((training, testing, headers, fwhms), filename, sigma, nsigma, fwhm, threshold, radius)
 
 
 

@@ -50,18 +50,11 @@ def Filter(training, testing,  **keywargs):
     filtered_testing = []
     for i, c in enumerate(training):
         c_mean = np.nanmean(derivfilterfunc( c ) - med)
-        if derivfilterfunc is None:
-            if c_mean <= (mean - ( std * std_coefficient)):
-                with contextlib.suppress(IndexError):
-                    filtered_training.append(c)
-                    filtered_testing.append(testing[i])
-        else:
-            if c_mean >= (mean - ( std * std_coefficient)):
-                with contextlib.suppress(IndexError):
-                    filtered_training.append(c)
-                    filtered_testing.append(testing[i])
 
-
+        if derivfilterfunc is None and c_mean <= (mean - (std * std_coefficient)) or derivfilterfunc is not None and c_mean >= (mean - (std * std_coefficient)):
+            with contextlib.suppress(IndexError):
+                filtered_training.append(c)
+                filtered_testing.append(testing[i])
     ## turn them from lists to np arrays
     filtered_training = np.array(filtered_training)
     filtered_training = filtered_training.reshape(-1, 2500)

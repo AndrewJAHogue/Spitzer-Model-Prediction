@@ -106,9 +106,7 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
     import numpy as np
 
 
-    ## create a FileSet using a filepath for the method to open, or using a ndarray already opened
-    if type(filepath_or_data) == str():
-        file_data = getdata(filepath_or_data)
+    if type(filepath_or_data) == type(str()):
     else:
         file_data = filepath_or_data
 

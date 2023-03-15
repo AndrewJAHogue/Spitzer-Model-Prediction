@@ -1,6 +1,4 @@
 
-import enum
-from multiprocessing.sharedctypes import Value
 import numpy as np
 
 
@@ -15,6 +13,7 @@ class FileSet:
             threshold (float): filter results beyond this limit
         """        
         from modules.ajh_utils import handy_dandy as hd
+
         self.training_set = training_testing_headers_fwhms[0]
         self.testing_set = training_testing_headers_fwhms[1]
         self.headers = training_testing_headers_fwhms[2]
@@ -25,7 +24,6 @@ class FileSet:
         self.fwhm = fwhm
         self.threshold = threshold
         self.source_filename = hd.getFileName( source_filename )
-        self.test = self.source_filename
 
         from datetime import datetime
         dt = datetime.now()
@@ -70,15 +68,6 @@ class FileSet:
 
         lplts.plot_gallery(self.training_set, 50, 50, 10, 3)
        
-
-    def __calcNumBins(self):
-        fwhms = self.getFWHMS()
-        n = len(fwhms)
-        intRange = np.nanmax(fwhms) - np.nanmin(fwhms)
-        intervals = np.sqrt(n)
-        
-        return range(0, int(np.round(intRange)), int(np.round(intervals)))
-
         
                
     def plotFWHMHist(self):

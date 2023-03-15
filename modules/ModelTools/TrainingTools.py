@@ -46,7 +46,7 @@ class FileSet:
     # class
 
     def getFWHMS(self):
-        return [f.fwhm for f in self.test]
+        return [f.fwhm for f in self.fwhm]
 
     def saveFileSet(self):
         import dill

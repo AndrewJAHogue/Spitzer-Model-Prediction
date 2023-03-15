@@ -140,19 +140,52 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
     headers = np.array(headers)
 
 
-    # from codetiming import Timer
 
-    # timer = Timer(name="class")
-    # timer.start()
-    # fwhms = []
-    # for i,t in enumerate( testing ):
-    #     try:
-    #         f = hd.get_fwhm(t)
-    #     except ValueError:
-    #         f = np.NaN
-            
-    #     pos = headers[i].input_position_original
-    #     fwhms.append((pos, f))
+
+class MultiSet:
+    def __init__(self, filesets, **keywargs):
+       self.filename = keywargs.get('filename') 
+
+
+       from datetime import datetime
+       dt = datetime.now()
+       time_str = dt.strftime('%c')
+
+       self.date_created = time_str
+       self.date_modified = [ time_str ]
+
+       self.source_filesets = filesets
+
+    # TODO fix return methods to numpy.concatenate instead
+    def getTrainingData(self):
+        return [ f.training_set for f in self.source_filesets]
+
+    def getTestingData(self):
+        return [ f.testing_set for f in self.source_filesets]
+
+
+    def saveMultiSet(self, **keywargs):
+        import dill
+
+        filename = keywargs.get('filename')
+        if self.filename is None:
+            if filename is not None:
+                self.filename = filename
+            else:
+                raise AttributeError("Missing Filename")
+
+        output_filename = f'{self.filename}_multiset.dill'
+        with open(f'./datasets/multisets/{output_filename}', 'wb') as f:
+            dill.dump(self, f, byref=True)
+
+    
+    def UpdateFileSetTime(self):
+        from datetime import datetime
+        dt = datetime.now()
+
+        self.date_modified.insert(0, dt.strftime('%c'))
+
+
 
     fwhms = []
     # timer.stop()

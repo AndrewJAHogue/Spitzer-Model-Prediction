@@ -93,34 +93,6 @@ class FileSet:
 
     
 
-
-# class DataSet:
-#     def __init__(self, FileSetArray):
-#         self.data = FileSetArray
-
-#         from datetime import datetime
-#         dt = datetime.now()
-#         self.date_created.append(dt.strftime(f'%c'))
-#         self.date_modified = [ date_created ]
-
-#     def saveDataSet(self, filename):
-#         import joblib
-
-#         # We assume the DataSet is being saved because it was modified
-#         self.UpdateFileSetTime()
-        
-#         # always use the most recent modified time to save the file
-#         output_filename = f'{self.date_modified[0]}_training_testing.jbl'
-#         with open(f'./datasets/training_testing/{output_filename}', 'wb') as f:
-#             joblib.dump(self, f)
-
-#         # self.saved_filename = output_filename
-        
-#     def UpdateFileSetTime(self):
-#         from datetime import datetime
-#         dt = datetime.now()
-#         self.date_modified.insert(0, dt.strftime('%c'))
-
         
 
 def CreateFileSet(filepath_or_data,filename, **keywargs):

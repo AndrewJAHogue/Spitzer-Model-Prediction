@@ -187,8 +187,10 @@ class MultiSet:
 
 
 
-    fwhms = []
-    # timer.stop()
-    print(f'Created FileSet with parameters:\n{sigma = }\n{nsigma = }\n{radius = }\n{fwhm = }\n{threshold = }\nfrom source {filename}')
-    return FileSet((training, testing, headers, fwhms), filename, sigma, nsigma, fwhm, threshold, radius)
+def comparePredictions(input_test, output_test, predictions):
+    from modules.ajh_utils import handy_dandy as hd
+    from modules.ajh_utils import lineplots as lplts
 
+    zipped = np.array( hd.myzip(input_test, output_test, predictions) )
+    lplts.plot_gallery(zipped, 50, 50, 100, 3, Stats=True, index=False)
+    

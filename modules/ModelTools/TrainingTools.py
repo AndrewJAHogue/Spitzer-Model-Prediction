@@ -49,13 +49,14 @@ class FileSet:
         return [f.fwhm for f in self.test]
 
     def saveFileSet(self):
-        import joblib
+        import dill
+        from modules.ajh_utils import handy_dandy as hd
 
         self.UpdateFileSetTime()
         
-        output_filename = f'{ hd.getFileName(self.source_filename) }_training_testing_headers.jbl'
+        output_filename = f'{ hd.getFileName(self.source_filename) }_training_testing_headers.dill'
         with open(f'./datasets/cutouts/{output_filename}', 'wb') as f:
-            joblib.dump(self, f)
+            dill.dump(self, f, byref=True)
 
         # self.saved_filename = output_filename
 

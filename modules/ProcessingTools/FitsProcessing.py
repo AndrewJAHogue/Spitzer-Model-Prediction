@@ -20,8 +20,11 @@ def Filter(training, testing,  **keywargs):
 
     Args:
         input_data (tuple of two ndarrays): (input_training_set, input_testing_set) is a tuple of the training and testing data sets, which are both ndarrays containing (50,50) cutouts
-        std_coefficient (float, optional): The coefficient to multiply the standard deviation of the whole training set by. Defaults to 1.5.
-        sigma (float, optional): The sigma value used for sigma_clipped_stats. Defaults to 3..
+
+        **keywargs:
+            std_coefficient (float, optional): The coefficient to multiply the standard deviation of the whole training set by. Defaults to 1.5.
+            sigma (float, optional): The sigma value used for sigma_clipped_stats. Defaults to 3..
+            derivfilterfunc (function)
 
     Returns:
         tuple of two ndarrays: A tuple of (training_set, testing_set) that have been filtered

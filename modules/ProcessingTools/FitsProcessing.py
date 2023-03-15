@@ -42,7 +42,7 @@ def Filter(training, testing,  **keywargs):
     ## otherwise, just keep the data untouched
     if derivfilterfunc is None:
         derivfilterfunc = lambda a : a
-        
+
     # filter out bad cutouts
     if sigma == 0:
         mean, med, std = sigma_clipped_stats(derivfilterfunc( training ), stdfunc=np.nanstd)
@@ -245,3 +245,21 @@ def getFWHMobj(t, i, dataset, file):
     l,b = getGalDegree(xpixel, ypixel, file)
 
     return FWHMinfo(l, b, getFWHM(t))
+
+
+## return fwhm paired with coordinate for every testing cutout
+def getFWHMsForFile(fileset, fits_file):
+
+    # print('getFWHMSForFile')
+    testing = fileset.testing_set
+
+    fwhm = lambda t, i : getFWHMobj(t, i, fileset, fits_file)
+
+    return [fwhm(t, i) for i, t in enumerate(testing)] , fileset
+
+
+
+
+
+
+

@@ -10,3 +10,5 @@ datasets
 GIT
 *.jukit
 *.session
+*.svg
+*.pdf

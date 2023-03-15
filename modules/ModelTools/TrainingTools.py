@@ -107,6 +107,18 @@ def CreateFileSet(filepath_or_data,filename, **keywargs):
 
 
     if type(filepath_or_data) == type(str()):
+        print('it is a string')
+    #     ## only run this block if the argument is a filepath string
+        fits_file = fits.open(filepath_or_data)
+        file_data = fits_file[0].data
+
+
+        print(f'{fits_file = }')
+        print(f'{file_data.shape = }')
+
+    #     ## run the image data through the function, to slice off the GC portion
+    #     # takes the fits file object
+        file_data = fp.sliceImageProperly(fits_file)
     else:
         file_data = filepath_or_data
 

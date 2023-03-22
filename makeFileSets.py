@@ -71,29 +71,9 @@ from modules.ModelTools import TrainingTools as tt
 from modules.ProcessingTools import FitsProcessing as fp
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import  KNeighborsRegressor
-import numpy as np
 
 # %%
 
-
-# filesets = []
-# base_dir = './datasets/cutouts/dills/'
-# files = os.listdir(base_dir)
-# for f in os.listdir(base_dir):
-#     # print(f)
-#     with open(f'{base_dir}{f}', 'rb') as file:
-#         f = dill.load(file) 
-#         filesets.append(f)
-
-# # with open(f'{base_dir}{files[0]}', 'rb') as f:
-# #     fileset = dill.load(f) 
-# #     filesets.append(fileset)
-
-# multiset = tt.MultiSet(filesets)
-# # print( len( multiset.source_filesets ) )
-
-# with open('./datasets/multisets/MultiSet_One.dill', 'wb') as f:
-#     dill.dump(multiset, f)
 
 with open('./datasets/multisets/MultiSet_One.dill', 'rb') as f:
     multiset = dill.load(f)
@@ -101,33 +81,8 @@ with open('./datasets/multisets/MultiSet_One.dill', 'rb') as f:
 # %%
 #|%%--%%| <4uNdGi2qh4|GsJMvcTBvQ>
 
-# filtered_train, filtered_test = [ fp.Filter(train, test, std_coefficient=1, sigma=0) for train,test in ( multiset.getTrainingData(), multiset.getTestingData() ) ]
-# training = np.concatenate(multiset.getTrainingData())
-# testing = np.concatenate(multiset.getTestingData())
 training = multiset.getTrainingData()
 testing = multiset.getTestingData()
-
-# # %%
-
-# # filtered_train, filtered_test = [ fp.Filter(train, test, std_coefficient=1, sigma=0) for train, test in ( training, testing )]
-# filtered_train = []
-# filtered_test = []
-# for i, train in enumerate(training):
-#     # print(f'{i = }')
-#     t, test = fp.Filter(train, testing[i], std_coefficient=1, sigma=0)
-#     try:
-#         t = fp.SimpleProcessData(t, 0)
-#     except ValueError:
-#         continue
-
-#     try:
-#         test = fp.SimpleImpute(test)
-#     except:
-#         continue
-    
-#     filtered_train.append(t)
-#     filtered_test.append(test)
-
 # filtered_train = np.concatenate(filtered_train)
 # filtered_test = np.concatenate(filtered_test)
     

@@ -193,6 +193,14 @@ class MultiSet:
 
         self.date_modified.insert(0, dt.strftime('%c'))
 
+    def getAllFWHMs(self):
+        return [f.getFWHMS() for f in self.source_filesets]
+
+    # def plotFWHMGallery(self, h, w, n_row=3, n_col=4, **keywargs):
+    #     import pandas as pd
+    #     import contextlib
+    #     import matplotlib.pyplot as plt
+
 
 
 def comparePredictions(input_test, output_test, predictions):

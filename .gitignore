@@ -12,3 +12,4 @@ GIT
 *.session
 *.svg
 *.pdf
+*.hdf5

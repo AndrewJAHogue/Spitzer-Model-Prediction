@@ -82,8 +82,6 @@ class FileSet:
 
     
 
-        
-
 def CreateFileSet(filepath_or_data,filename, **keywargs):
     """ Automatically create a masked cutout lists from that image, and create a FileSet object from a fits file image. 
 
@@ -171,6 +169,8 @@ class MultiSet:
     def getTestingData(self):
         return [ f.testing_set for f in self.source_filesets]
 
+    def getSourceSets(self):
+        return self.source_filesets
 
     def saveMultiSet(self, **keywargs):
         import dill
@@ -206,6 +206,28 @@ class MultiSet:
         import dill
         return dill.dumps(self) == dill.dumps(other)
 
+
+class ModelSet:
+    def __init__(self, model, multiset, training, testing, **keywargs):
+        self.filename = keywargs.get('filename') 
+
+        self.model = model
+        self.model_type = type(model)
+        self.training_set = training 
+        self.testing_set = testing 
+        self.source_multiset = multiset
+
+        from datetime import datetime
+        dt = datetime.now()
+        time_str = dt.strftime('%c')
+
+        self.date_created = time_str
+        self.date_modified = [ time_str ]
+
+    def UpdateFileSetTime(self):
+        from datetime import datetime
+        dt = datetime.now()
+        self.date_modified.insert(0, dt.strftime('%c'))
 
 
 

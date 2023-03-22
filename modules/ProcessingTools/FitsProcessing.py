@@ -38,6 +38,10 @@ def Filter(training, testing,  **keywargs):
     from astropy.stats import sigma_clipped_stats
     import contextlib
 
+
+    training = np.concatenate( multiset.getTrainingData() )
+    testing = np.concatenate( multiset.getTestingData() )
+
     ## optional argument to perform a differential on the input data
     ## otherwise, just keep the data untouched
     if derivfilterfunc is None:
@@ -66,6 +70,65 @@ def Filter(training, testing,  **keywargs):
     filtered_testing = filtered_testing.reshape(-1, 2500)
 
     return filtered_training, filtered_testing
+
+
+# def FilterMultiset(multiset,  **keywargs):
+#     """ Filter out cutouts from the input MultiSet that exceed the mean of the whole training set
+
+#     Args:
+#         input_data (MultiSet): A MultiSet object containing attribute arrays training_set and testing_set
+
+#         **keywargs:
+#             std_coefficient (float, optional): The coefficient to multiply the standard deviation of the whole training set by. Defaults to 1.5.
+#             sigma (float, optional): The sigma value used for sigma_clipped_stats. Defaults to 3..
+#             derivfilterfunc (function)
+
+#     Returns:
+#         tuple of two ndarrays: A tuple of (training_set, testing_set) that have been filtered
+#     """    
+
+#     derivfilterfunc = keywargs.get('derivfilterfunc')
+#     std_coefficient = keywargs.get('std_coefficient', 1.)
+#     sigma = keywargs.get('sigma', 0.)
+
+
+#     from astropy.stats import sigma_clipped_stats
+#     import contextlib
+
+
+#     training = np.concatenate( multiset.getTrainingData() )
+#     # testing = np.concatenate( multiset.getTestingData() )
+
+#     ## optional argument to perform a differential on the input data
+#     ## otherwise, just keep the data untouched
+#     if derivfilterfunc is None:
+#         derivfilterfunc = lambda a : a
+
+#     # filter out bad cutouts
+#     if sigma == 0:
+#         mean, med, std = sigma_clipped_stats(derivfilterfunc( training ), stdfunc=np.nanstd)
+#     else:
+#         mean, med, std = sigma_clipped_stats(derivfilterfunc( training ), sigma=sigma, stdfunc=np.nanstd)
+
+#     filtered_training = []
+#     filtered_testing = []
+#     for i, set in enumerate(multiset.getSourceSets()):
+#         for c in set.training_set:
+#             c_mean = np.nanmean(derivfilterfunc( c ) - med)
+
+#             if derivfilterfunc is None and c_mean <= (mean - (std * std_coefficient)) or derivfilterfunc is not None and c_mean >= (mean - (std * std_coefficient)):
+#                 with contextlib.suppress(IndexError):
+#                     filtered_training.append(c)
+#                     filtered_testing.append(testing[i])
+
+#     ## turn them from lists to np arrays
+#     filtered_training = np.array(filtered_training)
+#     filtered_training = filtered_training.reshape(-1, 2500)
+
+#     filtered_testing = np.array(filtered_testing)
+#     filtered_testing = filtered_testing.reshape(-1, 2500)
+
+#     return filtered_training, filtered_testing
 
 def FilterFirstDerivative(training, testing, std_coefficient=1.5, sigma=3.):
     """ Filter out cutouts that exceed the mean of the first derivative whole training set

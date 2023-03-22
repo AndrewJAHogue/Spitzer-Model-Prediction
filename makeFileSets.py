@@ -123,9 +123,29 @@ if len(filtered_train):
 
 # %%
 
-with open('./datasets/models/knnOne_training_testing.dill', 'wb') as f:
-    dill.dump((knn, filtered_train, filtered_test), f)
+with open("./datasets/models/knnOne_training_testing.dill", "rb") as f:
+    knn, filtered_train, filtered_test = dill.load(f)
+
+modelset = tt.ModelSet(knn, multiset, filtered_train, filtered_test)
+
+# import lzma
+import blosc
+
+# %%
+
+
+pickled_data = dill.dumps(modelset)  # returns data as a bytes object
+compressed_pickle = blosc.compress(pickled_data, byref=True)
+
+# with open("path/to/file/test.dat", "wb") as f:
+#     f.write(compressed_pickle)
+
+with open('./datasets/models/ModelSetOne.xzdill', 'wb') as f:
+    # dill.dump(modelset, f, byref=True)
+    f.write(compressed_pickle)
     
+
+
     
 # %%
 

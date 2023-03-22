@@ -201,6 +201,12 @@ class MultiSet:
     #     import contextlib
     #     import matplotlib.pyplot as plt
 
+    ## very slow way to do byte comparison between two instances of this class
+    def __eq__(self, other):
+        import dill
+        return dill.dumps(self) == dill.dumps(other)
+
+
 
 
 def comparePredictions(input_test, output_test, predictions):

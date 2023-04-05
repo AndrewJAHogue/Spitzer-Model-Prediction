@@ -14,3 +14,4 @@ GIT
 *.pdf
 *.hdf5
 *.h5
+*.pyc

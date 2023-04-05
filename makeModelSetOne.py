@@ -28,8 +28,8 @@ from modules.ProcessingTools import ByteWriter
 #|%%--%%| <wnrSjahv6C|d64KS9hlrB>
 # %%
 
-with open("./datasets/models/knnOne_training_testing.dill", "rb") as f:
-    knn, filtered_train, filtered_test = dill.load(f)
+# with open("./datasets/models/knnOne_training_testing.dill", "rb") as f:
+#     knn, filtered_train, filtered_test = dill.load(f)
 
 with open('./datasets/multisets/MultiSet_One.dill', 'rb') as f:
     multiset = dill.load(f)
@@ -139,7 +139,6 @@ sources_dicts = [source.__dict__ for source in multiset_dict['source_filesets']]
 multiset.filename = 'none'
 
 dt = h5py.special_dtype(vlen=str)
-dt = h5py.special_dtype(vlen=str)
 with h5py.File('./multisets.h5', 'w') as f:
     m1 = f.create_group('multiset_one')
     for key in multiset_dict:
@@ -227,3 +226,18 @@ with h5py.File('./test.hdf5', 'r') as f:
 
 
 #|%%--%%|
+cutout = multiset.source_filesets[0].headers[0]
+# pkl = dill.dumps(cutout)
+
+import codecs
+pickled = codecs.encode(dill.dumps(cutout), "base64").decode()
+
+unpickle = lambda pickled : dill.loads(codecs.decode(pickled.encode(), "base64"))
+
+with h5py.File('dilled.h5', 'w') as f:
+    f.create_dataset('cutout', data=[ pickled ])
+
+with h5py.File('dilled.h5', 'r') as f:
+    dset = f['cutout']
+    # dset[0].replace('b', '')
+    print(dill.dumps( unpickle(dset[0].decode())) == dill.dumps(cutout))
